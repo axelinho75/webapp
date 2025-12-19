@@ -3,6 +3,7 @@ pipeline {
         docker {
             image 'python:3.14-slim'
             args '-v /var/run/docker.sock:/var/run/docker.sock'
+            reuseNode true
         }
     }
 
@@ -16,12 +17,13 @@ pipeline {
                 script {
                     echo '========== Installation de UV et des dépendances =========='
                     sh '''
-                        apt-get update
+                        apt-get update -qq
                         apt-get install -y \
                             curl \
                             wget \
                             gnupg \
                             unzip \
+                            procps \
                             chromium-browser \
                             chromium-driver
                         
