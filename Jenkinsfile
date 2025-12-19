@@ -14,7 +14,7 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    echo '========== Installation des dépendances =========='
+                    echo '========== Installation de UV et des dépendances =========='
                     sh '''
                         apt-get update
                         apt-get install -y \
@@ -25,8 +25,8 @@ pipeline {
                             chromium-browser \
                             chromium-driver
                         
-                        pip install --upgrade pip
-                        pip install -e ".[dev]"
+                        pip install --upgrade uv
+                        uv sync --dev
                     '''
                 }
             }
@@ -37,9 +37,9 @@ pipeline {
                 script {
                     echo '========== Vérification du code =========='
                     sh '''
-                        pip install flake8 pylint
-                        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
-                        pylint **/*.py || true
+                        uv pip install flake8 pylint
+                        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+                        uv run pylint **/*.py || true
                     '''
                 }
             }
@@ -50,7 +50,7 @@ pipeline {
                 script {
                     echo '========== Exécution des tests unitaires =========='
                     sh '''
-                        pytest unit_side_function.py -v --tb=short
+                        uv run pytest unit_side_function.py -v --tb=short
                     '''
                 }
             }
@@ -61,7 +61,7 @@ pipeline {
                 script {
                     echo '========== Exécution des tests d\'intégration =========='
                     sh '''
-                        python -m pytest test_nowebrowserapp.py test_webapp.py -v --tb=short
+                        uv run pytest test_nowebrowserapp.py test_webapp.py -v --tb=short
                     '''
                 }
             }
@@ -72,7 +72,7 @@ pipeline {
                 script {
                     echo '========== Démarrage de l\'application Flask =========='
                     sh '''
-                        nohup python main.py > flask_app.log 2>&1 &
+                        nohup uv run python main.py > flask_app.log 2>&1 &
                         sleep 3
                         curl -f http://localhost:5000/ || echo "Flask app not yet ready"
                     '''
@@ -85,7 +85,7 @@ pipeline {
                 script {
                     echo '========== Exécution des tests Selenium =========='
                     sh '''
-                        pytest webapp_test.py -v --tb=short
+                        uv run pytest webapp_test.py -v --tb=short
                     '''
                 }
             }
@@ -96,8 +96,8 @@ pipeline {
                 script {
                     echo '========== Génération des rapports =========='
                     sh '''
-                        pip install pytest-html
-                        pytest . -v --html=report.html --self-contained-html || true
+                        uv pip install pytest-html
+                        uv run pytest . -v --html=report.html --self-contained-html || true
                     '''
                 }
             }
